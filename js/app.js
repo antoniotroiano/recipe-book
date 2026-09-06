@@ -493,8 +493,46 @@ async function importFile(file){
   state.view='recipes';state.category='Alle';render();toast(`${incoming.length} Rezept(e) importiert`);
   }catch(err){console.error(err);alert(`Import fehlgeschlagen: ${err.message}`);}}
 
-async function addCategory(){const raw=prompt('Wie soll die neue Kategorie heißen?');const name=(raw||'').trim();if(!name)return;if(categories().some(c=>c.toLowerCase()===name.toLowerCase())){toast('Diese Kategorie gibt es bereits.');return;}const category={id:newId(),name,createdAt:new Date().toISOString()};state.categories.push(category);await putCategory(category);state.category=name;state.view='recipes';render();toast('Kategorie angelegt');}
-$('newRecipeBtn').onclick=()=>openModal();$('emptyNewBtn').onclick=()=>openModal();const emptyImport=$('emptyImportBtn');if(emptyImport)emptyImport.onclick=showTextImportModal;$('closeModalBtn').onclick=closeModal;$('cancelModalBtn').onclick=closeModal;$('recipeModal').onclick=e=>{if(e.target===$('recipeModal'))closeModal()};$('searchInput').oninput=e=>{state.search=e.target.value;renderCards();};$('sortSelect').onchange=e=>{state.sort=e.target.value;renderCards();};$('addCategoryBtn').onclick=addCategory;$('mobileCategoryBtn').onclick=addCategory;$('mobileImportBtn').onclick=showImportChooser;$('mobileExportBtn').onclick=()=>exportRecipes(state.recipes);$('addSectionBtn').onclick=()=>{state.editing.sections.push(emptySection(`Bereich ${state.editing.sections.length+1}`));renderSections(state.editing);};$('addStepBtn').onclick=()=>{state.editing.preparationSteps.push(emptyStep());renderSteps(state.editing);};$('imageInput').onchange=async e=>{if(e.target.files[0]){state.image=await readFile(e.target.files[0]);updateImagePreview();}};$('removeImageBtn').onclick=()=>{state.image=null;updateImagePreview();};$('categoryInput').onchange=e=>{if(e.target.value==='__new__'){const c=prompt('Neue Kategorie');if(c){e.target.innerHTML+=`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`;e.target.value=c;}}};const textImportBtn = $('textImportBtn'); if (textImportBtn) textImportBtn.onclick = showTextImportModal;$('exportBtn').onclick=()=>exportRecipes(state.recipes);$('importBtn').onclick=showImportChooser;$('fileImportInput').onchange=e=>importFile(e.target.files[0]);
+function showCategoryModal(){
+  const existing=document.getElementById('categoryModal');
+  if(existing) existing.remove();
+  const wrapper=document.createElement('div');
+  wrapper.id='categoryModal';
+  wrapper.className='modal-backdrop';
+  wrapper.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
+    <div class="modal-header"><div><p class="eyebrow">KATEGORIE</p><h2 id="categoryModalTitle">Kategorie hinzufügen</h2></div><button type="button" class="icon-button" data-close-category>×</button></div>
+    <label>Kategoriename<input id="newCategoryInput" maxlength="80" placeholder="z. B. Pasta, Dessert, Backen"></label>
+    <div class="modal-footer"><button type="button" class="secondary-button" data-close-category>Abbrechen</button><button type="button" class="primary-button" id="saveNewCategoryBtn">Kategorie anlegen</button></div>
+  </div>`;
+  document.body.appendChild(wrapper);
+  const close=()=>wrapper.remove();
+  wrapper.querySelectorAll('[data-close-category]').forEach(btn=>btn.addEventListener('click',close));
+  wrapper.addEventListener('click',e=>{if(e.target===wrapper)close();});
+  const input=wrapper.querySelector('#newCategoryInput');
+  const save=async()=>{const name=input.value.trim();if(!name){input.focus();return;}if(categories().some(c=>c.toLowerCase()===name.toLowerCase())){toast('Diese Kategorie gibt es bereits.');input.focus();return;}const category={id:newId(),name,createdAt:new Date().toISOString()};state.categories.push(category);await putCategory(category);close();state.category=name;state.view='recipes';render();toast('Kategorie angelegt');};
+  wrapper.querySelector('#saveNewCategoryBtn').addEventListener('click',save);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save();}});
+  setTimeout(()=>input.focus(),30);
+}
+function bindAction(id, handler){const el=$(id);if(!el)return;el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();Promise.resolve(handler(e)).catch(err=>{console.error(err);alert(err.message||String(err));});},{passive:false});}
+bindAction('newRecipeBtn',()=>openModal());bindAction('emptyNewBtn',()=>openModal());const emptyImport=$('emptyImportBtn');if(emptyImport)emptyImport.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showTextImportModal();});bindAction('closeModalBtn',closeModal);bindAction('cancelModalBtn',closeModal);$('recipeModal').onclick=e=>{if(e.target===$('recipeModal'))closeModal()};$('searchInput').oninput=e=>{state.search=e.target.value;renderCards();};$('sortSelect').onchange=e=>{state.sort=e.target.value;renderCards();};
+['addCategoryBtn','mobileCategoryBtn'].forEach(id=>bindAction(id,showCategoryModal));
+bindAction('mobileImportBtn',showImportChooser);
+bindAction('mobileExportBtn',()=>exportRecipes(state.recipes));
+bindAction('addSectionBtn',()=>{state.editing.sections.push(emptySection(`Bereich ${state.editing.sections.length+1}`));renderSections(state.editing);});
+bindAction('addStepBtn',()=>{state.editing.preparationSteps.push(emptyStep());renderSteps(state.editing);});
+$('imageInput').onchange=async e=>{if(e.target.files[0]){state.image=await readFile(e.target.files[0]);updateImagePreview();}};bindAction('removeImageBtn',()=>{state.image=null;updateImagePreview();});$('categoryInput').onchange=e=>{if(e.target.value==='__new__'){showCategoryModal();e.target.value='';}};const textImportBtn = $('textImportBtn'); if (textImportBtn) textImportBtn.addEventListener('click',showTextImportModal);bindAction('exportBtn',()=>exportRecipes(state.recipes));bindAction('importBtn',showImportChooser);$('fileImportInput').onchange=e=>importFile(e.target.files[0]);
+
+// Event delegation is intentional: it makes the mobile toolbar reliable even in cached/standalone web-app contexts.
+document.addEventListener('click',e=>{
+  const target=e.target.closest?.('#mobileCategoryBtn,#mobileImportBtn,#mobileExportBtn');
+  if(!target)return;
+  if(target.dataset.boundByDelegation==='1')return;
+  e.preventDefault();e.stopPropagation();
+  if(target.id==='mobileCategoryBtn')showCategoryModal();
+  else if(target.id==='mobileImportBtn')showImportChooser();
+  else if(target.id==='mobileExportBtn')exportRecipes(state.recipes).catch(err=>{console.error(err);alert(err.message||String(err));});
+},{capture:true});
 $('recipeForm').onsubmit=async e=>{e.preventDefault();const r=normalizeRecipe(state.editing);r.name=$('nameInput').value.trim();r.servings=Math.max(1,Number($('servingsInput').value)||1);r.description=$('descriptionInput').value.trim();r.rating=state.rating;r.image=state.image;r.favorite=state.editing.favorite;r.source={url:$('sourceUrlInput').value.trim(),name:$('sourceNameInput').value.trim()};r.notes=$('notesInput').value.trim();const cat=$('categoryInput').value; r.categories=cat&&cat!=='__new__'?[cat]:[];r.updatedAt=new Date().toISOString();if(r.categories[0]&&!state.categories.some(c=>c.name.toLowerCase()===r.categories[0].toLowerCase())){const category={id:newId(),name:r.categories[0],createdAt:new Date().toISOString()};state.categories.push(category);await putCategory(category);}await putRecipe(r);const idx=state.recipes.findIndex(x=>x.id===r.id);if(idx>=0)state.recipes[idx]=r;else state.recipes.push(r);closeModal();state.view='recipes';render();toast('Rezept gespeichert');};
 
 document.querySelectorAll('.nav-item').forEach(btn=>btn.onclick=()=>{state.view=btn.dataset.view;state.category='Alle';render();});

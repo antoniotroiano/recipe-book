@@ -19,3 +19,11 @@
 .topbar-tool{display:none}
 @media(max-width:900px){.topbar-tool{display:inline-flex}.topbar-actions{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.topbar-actions #newRecipeBtn{grid-column:1/-1}.topbar-actions button{width:100%;justify-content:center}}
 @media(max-width:560px){.topbar-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.topbar-tool{font-size:12px;padding:9px 7px}.topbar-actions #newRecipeBtn{font-size:14px;padding:11px 10px}}
+
+
+/* v7 mobile interaction hardening */
+.topbar, .topbar-actions, .topbar-tool { position: relative; z-index: 5; }
+.topbar-tool, .primary-button, .secondary-button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+@media(max-width:900px){
+  .topbar-actions .topbar-tool { display:flex; min-height:44px; align-items:center; }
+}
