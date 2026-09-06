@@ -1,8 +1,9 @@
 /* Recipe Book v5 - classic script bundle for file://, local server and GitHub Pages */
 
 const DB_NAME = 'recipe-book-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = 'recipes';
+const CATEGORY_STORE = 'categories';
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -10,6 +11,7 @@ function openDb() {
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
+      if (!db.objectStoreNames.contains(CATEGORY_STORE)) db.createObjectStore(CATEGORY_STORE, { keyPath: 'id' });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -58,6 +60,26 @@ async function replaceAll(recipes) {
   });
 }
 
+
+async function getAllCategories() {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CATEGORY_STORE, 'readonly');
+    const req = tx.objectStore(CATEGORY_STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function putCategory(category) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CATEGORY_STORE, 'readwrite');
+    tx.objectStore(CATEGORY_STORE).put(category);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
 
 const EXPORT_FORMAT = 'recipe-book';
 const EXPORT_VERSION = 1;
@@ -122,7 +144,7 @@ function normalizeRecipe(input) {
 }
 
 function buildExport(recipes) {
-  return { format: EXPORT_FORMAT, version: EXPORT_VERSION, exportedAt: new Date().toISOString(), recipes: recipes.map(normalizeRecipe) };
+  return { format: EXPORT_FORMAT, version: EXPORT_VERSION, exportedAt: new Date().toISOString(), categories: state.categories, recipes: recipes.map(normalizeRecipe) };
 }
 
 
@@ -294,14 +316,17 @@ function parseRecipeText(input) {
 
 
 
-const state = { recipes: [], view: 'recipes', category: 'Alle', search: '', sort: 'newest', editing: null, rating: 0, image: null };
+const state = { recipes: [], categories: [], view: 'recipes', category: 'Alle', search: '', sort: 'newest', editing: null, rating: 0, image: null };
 const $ = (id) => document.getElementById(id);
 const recipeGrid = $('recipeGrid');
 
 function escapeHtml(value='') { return value.replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch])); }
 function toast(message) { const el=$('toast'); el.textContent=message; el.classList.add('show'); clearTimeout(window.__toast); window.__toast=setTimeout(()=>el.classList.remove('show'),2200); }
 function stars(rating) { return '★'.repeat(rating) + '☆'.repeat(5-rating); }
-function categories() { return [...new Set(state.recipes.flatMap(r=>r.categories || []))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'de')); }
+function categories() {
+  const names = [...state.categories.map(c=>c.name), ...state.recipes.flatMap(r=>r.categories || [])];
+  return [...new Set(names)].filter(Boolean).sort((a,b)=>a.localeCompare(b,'de'));
+}
 function filteredRecipes() {
   let list = state.recipes.filter(r => state.view==='favorites' ? r.favorite : true);
   if (state.category!=='Alle') list=list.filter(r=>(r.categories||[]).includes(state.category));
@@ -457,16 +482,29 @@ function download(blob,name){const a=document.createElement('a');a.href=URL.crea
 
 async function importFile(file){
   if(!file)return;let parsed;try{if(file.name.toLowerCase().endsWith('.zip')){if(!window.JSZip)throw new Error('ZIP-Unterstützung nicht geladen');const zip=await JSZip.loadAsync(file);const json=zip.file('recipes.json');if(!json)throw new Error('recipes.json fehlt');parsed=JSON.parse(await json.async('text'));for(const r of parsed.recipes||[]){const match=Object.keys(zip.files).find(k=>k.startsWith('images/'+r.id+'.'));if(match){const blob=await zip.file(match).async('blob');r.image=await readFile(blob);}}}else{parsed=JSON.parse(await file.text());}
-  if(parsed.format!=='recipe-book')throw new Error('Unbekanntes Rezeptformat');const incoming=(parsed.recipes||[]).map(normalizeRecipe);if(!incoming.length)throw new Error('Keine Rezepte enthalten');const mode=confirm(`Import gefunden: ${incoming.length} Rezept(e).\n\nOK = vorhandene Rezepte anhand der ID aktualisieren\nAbbrechen = Importvorgang abbrechen`);if(!mode)return;const map=new Map(state.recipes.map(r=>[r.id,r]));incoming.forEach(r=>map.set(r.id,r));state.recipes=[...map.values()];await replaceAll(state.recipes);state.view='recipes';state.category='Alle';render();toast(`${incoming.length} Rezept(e) importiert`);
+  if(parsed.format!=='recipe-book')throw new Error('Unbekanntes Rezeptformat');const incoming=(parsed.recipes||[]).map(normalizeRecipe);if(!incoming.length)throw new Error('Keine Rezepte enthalten');const mode=confirm(`Import gefunden: ${incoming.length} Rezept(e).\n\nOK = vorhandene Rezepte anhand der ID aktualisieren\nAbbrechen = Importvorgang abbrechen`);if(!mode)return;const map=new Map(state.recipes.map(r=>[r.id,r]));incoming.forEach(r=>map.set(r.id,r));state.recipes=[...map.values()];
+  const importedCategories=Array.isArray(parsed.categories)?parsed.categories.map(c=>typeof c==='string'?{id:newId(),name:c}:{id:c.id||newId(),name:String(c.name||'').trim(),createdAt:c.createdAt||new Date().toISOString()}).filter(c=>c.name):[];
+  const catMap=new Map(state.categories.map(c=>[c.name.toLowerCase(),c]));
+  importedCategories.forEach(c=>{if(!catMap.has(c.name.toLowerCase()))catMap.set(c.name.toLowerCase(),c);});
+  state.recipes.flatMap(r=>r.categories||[]).forEach(name=>{if(!catMap.has(name.toLowerCase()))catMap.set(name.toLowerCase(),{id:newId(),name,createdAt:new Date().toISOString()});});
+  state.categories=[...catMap.values()];
+  await replaceAll(state.recipes);
+  for(const c of state.categories) await putCategory(c);
+  state.view='recipes';state.category='Alle';render();toast(`${incoming.length} Rezept(e) importiert`);
   }catch(err){console.error(err);alert(`Import fehlgeschlagen: ${err.message}`);}}
 
-$('newRecipeBtn').onclick=()=>openModal();$('emptyNewBtn').onclick=()=>openModal();const emptyImport=$('emptyImportBtn');if(emptyImport)emptyImport.onclick=showTextImportModal;$('closeModalBtn').onclick=closeModal;$('cancelModalBtn').onclick=closeModal;$('recipeModal').onclick=e=>{if(e.target===$('recipeModal'))closeModal()};$('searchInput').oninput=e=>{state.search=e.target.value;renderCards();};$('sortSelect').onchange=e=>{state.sort=e.target.value;renderCards();};$('addCategoryBtn').onclick=()=>{const c=prompt('Wie soll die neue Kategorie heißen?');if(!c)return;state.category=c.trim();render();toast('Kategorie kann jetzt im nächsten Rezept verwendet werden.');};$('addSectionBtn').onclick=()=>{state.editing.sections.push(emptySection(`Bereich ${state.editing.sections.length+1}`));renderSections(state.editing);};$('addStepBtn').onclick=()=>{state.editing.preparationSteps.push(emptyStep());renderSteps(state.editing);};$('imageInput').onchange=async e=>{if(e.target.files[0]){state.image=await readFile(e.target.files[0]);updateImagePreview();}};$('removeImageBtn').onclick=()=>{state.image=null;updateImagePreview();};$('categoryInput').onchange=e=>{if(e.target.value==='__new__'){const c=prompt('Neue Kategorie');if(c){e.target.innerHTML+=`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`;e.target.value=c;}}};const textImportBtn = $('textImportBtn'); if (textImportBtn) textImportBtn.onclick = showTextImportModal;$('exportBtn').onclick=()=>exportRecipes(state.recipes);$('importBtn').onclick=showImportChooser;$('fileImportInput').onchange=e=>importFile(e.target.files[0]);
-$('recipeForm').onsubmit=async e=>{e.preventDefault();const r=normalizeRecipe(state.editing);r.name=$('nameInput').value.trim();r.servings=Math.max(1,Number($('servingsInput').value)||1);r.description=$('descriptionInput').value.trim();r.rating=state.rating;r.image=state.image;r.favorite=state.editing.favorite;r.source={url:$('sourceUrlInput').value.trim(),name:$('sourceNameInput').value.trim()};r.notes=$('notesInput').value.trim();const cat=$('categoryInput').value; r.categories=cat&&cat!=='__new__'?[cat]:[];r.updatedAt=new Date().toISOString();await putRecipe(r);const idx=state.recipes.findIndex(x=>x.id===r.id);if(idx>=0)state.recipes[idx]=r;else state.recipes.push(r);closeModal();state.view='recipes';render();toast('Rezept gespeichert');};
+async function addCategory(){const raw=prompt('Wie soll die neue Kategorie heißen?');const name=(raw||'').trim();if(!name)return;if(categories().some(c=>c.toLowerCase()===name.toLowerCase())){toast('Diese Kategorie gibt es bereits.');return;}const category={id:newId(),name,createdAt:new Date().toISOString()};state.categories.push(category);await putCategory(category);state.category=name;state.view='recipes';render();toast('Kategorie angelegt');}
+$('newRecipeBtn').onclick=()=>openModal();$('emptyNewBtn').onclick=()=>openModal();const emptyImport=$('emptyImportBtn');if(emptyImport)emptyImport.onclick=showTextImportModal;$('closeModalBtn').onclick=closeModal;$('cancelModalBtn').onclick=closeModal;$('recipeModal').onclick=e=>{if(e.target===$('recipeModal'))closeModal()};$('searchInput').oninput=e=>{state.search=e.target.value;renderCards();};$('sortSelect').onchange=e=>{state.sort=e.target.value;renderCards();};$('addCategoryBtn').onclick=addCategory;$('mobileCategoryBtn').onclick=addCategory;$('mobileImportBtn').onclick=showImportChooser;$('mobileExportBtn').onclick=()=>exportRecipes(state.recipes);$('addSectionBtn').onclick=()=>{state.editing.sections.push(emptySection(`Bereich ${state.editing.sections.length+1}`));renderSections(state.editing);};$('addStepBtn').onclick=()=>{state.editing.preparationSteps.push(emptyStep());renderSteps(state.editing);};$('imageInput').onchange=async e=>{if(e.target.files[0]){state.image=await readFile(e.target.files[0]);updateImagePreview();}};$('removeImageBtn').onclick=()=>{state.image=null;updateImagePreview();};$('categoryInput').onchange=e=>{if(e.target.value==='__new__'){const c=prompt('Neue Kategorie');if(c){e.target.innerHTML+=`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`;e.target.value=c;}}};const textImportBtn = $('textImportBtn'); if (textImportBtn) textImportBtn.onclick = showTextImportModal;$('exportBtn').onclick=()=>exportRecipes(state.recipes);$('importBtn').onclick=showImportChooser;$('fileImportInput').onchange=e=>importFile(e.target.files[0]);
+$('recipeForm').onsubmit=async e=>{e.preventDefault();const r=normalizeRecipe(state.editing);r.name=$('nameInput').value.trim();r.servings=Math.max(1,Number($('servingsInput').value)||1);r.description=$('descriptionInput').value.trim();r.rating=state.rating;r.image=state.image;r.favorite=state.editing.favorite;r.source={url:$('sourceUrlInput').value.trim(),name:$('sourceNameInput').value.trim()};r.notes=$('notesInput').value.trim();const cat=$('categoryInput').value; r.categories=cat&&cat!=='__new__'?[cat]:[];r.updatedAt=new Date().toISOString();if(r.categories[0]&&!state.categories.some(c=>c.name.toLowerCase()===r.categories[0].toLowerCase())){const category={id:newId(),name:r.categories[0],createdAt:new Date().toISOString()};state.categories.push(category);await putCategory(category);}await putRecipe(r);const idx=state.recipes.findIndex(x=>x.id===r.id);if(idx>=0)state.recipes[idx]=r;else state.recipes.push(r);closeModal();state.view='recipes';render();toast('Rezept gespeichert');};
 
 document.querySelectorAll('.nav-item').forEach(btn=>btn.onclick=()=>{state.view=btn.dataset.view;state.category='Alle';render();});
 
 async function initRecipeBook(){
   state.recipes=await getAllRecipes();
+  state.categories=await getAllCategories();
+  const known=new Set(state.categories.map(c=>c.name.toLowerCase()));
+  const missing=state.recipes.flatMap(r=>r.categories||[]).filter(n=>n&&!known.has(n.toLowerCase()));
+  for(const name of [...new Set(missing)]){const category={id:newId(),name,createdAt:new Date().toISOString()};state.categories.push(category);await putCategory(category);known.add(name.toLowerCase());}
   if(state.recipes.length===0){
     const demo=normalizeRecipe({ ...emptyRecipe(), name:'Cremige Tomatenpasta', description:'Schnelle Pasta mit Tomaten und Sahne.', servings:2, rating:5, favorite:true, categories:['Pasta'], sections:[{...emptySection('Sauce'),ingredients:[{...emptyIngredient(),amount:400,unit:'g',name:'Pasta',sortOrder:1},{...emptyIngredient(),amount:250,unit:'g',name:'Tomaten',sortOrder:2},{...emptyIngredient(),amount:200,unit:'ml',name:'Sahne',sortOrder:3},{...emptyIngredient(),amount:2,unit:'Stück',name:'Knoblauchzehen',sortOrder:4}]}], preparationSteps:[{...emptyStep(),step:1,text:'Pasta nach Packungsanleitung kochen.'},{...emptyStep(),step:2,text:'Tomaten und Knoblauch anbraten und die Sahne hinzufügen.'},{...emptyStep(),step:3,text:'Pasta unterheben und mit Parmesan servieren.'}] });
     await putRecipe(demo);state.recipes=[demo];

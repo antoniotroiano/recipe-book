@@ -1,17 +1,12 @@
-# Mein Rezeptbuch – Prototyp v5
+# Mein Rezeptbuch – v6
 
-Lokale Web-App für die persönliche Rezeptverwaltung.
+Lokale Web-App für eine persönliche Rezeptsammlung.
+
+## Neu in v6
+- Import/Export und Kategorieverwaltung sind auch auf Smartphone-Bildschirmen erreichbar.
+- Kategorien werden separat in IndexedDB gespeichert und sind nicht mehr an ein einzelnes Rezept gebunden.
+- Kategorien werden im Backup mitexportiert und beim Import wiederhergestellt.
+- Bestehende Rezepte aus älteren Versionen werden automatisch in die Kategorieverwaltung übernommen.
 
 ## Start
-`index.html` kann direkt per Doppelklick geöffnet werden. Alternativ funktioniert ein lokaler Webserver oder GitHub Pages.
-
-## Import
-Der Button **Import** bietet zwei Möglichkeiten:
-- **Rezepttext übernehmen**: Instagram-Caption/Rezepttext einfügen und automatisch in Rezeptfelder aufteilen.
-- **Backup importieren**: zuvor exportierte JSON-/ZIP-Datei wiederherstellen.
-
-## Speicherung
-Rezepte werden lokal in IndexedDB gespeichert. Bilder werden als Teil des Backups berücksichtigt.
-
-## Exportformat
-Das Datenformat ist versioniert (`format: recipe-book`, `version: 1`) und relational strukturiert, damit es später auf ein Backend mit SQL-Datenbank migriert werden kann.
+Einfach `index.html` öffnen oder über einen kleinen HTTP-Server ausliefern. Die App funktioniert auch auf GitHub Pages.
