@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fbf7f2" />
+  <title>Mein Rezeptbuch</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-icon">🍴</div><div><strong>Mein Rezeptbuch</strong><span>Deine persönliche Sammlung</span></div></div>
+      <nav class="nav">
+        <button class="nav-item active" data-view="recipes">📚 <span>Meine Rezepte</span></button>
+        <button class="nav-item" data-view="favorites">❤️ <span>Favoriten</span></button>
+      </nav>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Kategorien</div>
+        <div id="categoryList" class="category-list"></div>
+        <button id="addCategoryBtn" class="text-button">＋ Kategorie</button>
+      </div>
+      <div class="sidebar-bottom">
+        <button id="importBtn" class="secondary-button full">⬆ Import</button>
+        <button id="exportBtn" class="secondary-button full">⬇ Alles exportieren</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">REZEPTSAMMLUNG</p>
+          <h1 id="viewTitle">Meine Rezepte</h1>
+          <p id="viewSubtitle" class="muted">Alles, was du gern wiederkochst.</p>
+        </div>
+        <button id="newRecipeBtn" class="primary-button">＋ Rezept hinzufügen</button>
+      </header>
+
+      <section id="recipeView" class="content-view">
+        <div class="toolbar">
+          <div class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Rezept suchen…" /></div>
+          <select id="sortSelect" aria-label="Sortierung">
+            <option value="newest">Zuletzt hinzugefügt</option>
+            <option value="name">Alphabetisch</option>
+            <option value="rating">Bewertung</option>
+          </select>
+        </div>
+        <div id="filterChips" class="filter-chips"></div>
+        <div id="recipeGrid" class="recipe-grid"></div>
+        <div id="emptyState" class="empty-state hidden">
+          <div class="empty-icon">🍲</div>
+          <h2>Noch keine Rezepte</h2>
+          <p>Lege dein erstes Rezept an oder importiere eine Sicherung.</p>
+          <div class="empty-actions"><button class="primary-button" id="emptyNewBtn">＋ Erstes Rezept anlegen</button><button class="secondary-button" id="emptyImportBtn">⌘ Rezept aus Text übernehmen</button></div>
+        </div>
+      </section>
+
+      <section id="detailView" class="content-view hidden"></section>
+    </main>
+  </div>
+
+  <div id="recipeModal" class="modal-backdrop hidden">
+    <div class="modal large-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header"><div><p class="eyebrow">REZEPT</p><h2 id="modalTitle">Rezept hinzufügen</h2></div><button id="closeModalBtn" class="icon-button" aria-label="Schließen">×</button></div>
+      <form id="recipeForm">
+        <input type="hidden" id="recipeId" />
+        <div class="form-grid two-cols">
+          <label>Titel<input id="nameInput" required maxlength="120" placeholder="z. B. Cremige Tomatenpasta" /></label>
+          <label>Portionen<input id="servingsInput" type="number" min="1" max="100" value="2" /></label>
+        </div>
+        <div class="form-grid two-cols">
+          <label>Kategorie<select id="categoryInput"></select></label>
+          <label>Bewertung<div id="ratingInput" class="rating-picker" aria-label="Bewertung"></div></label>
+        </div>
+        <label>Beschreibung<textarea id="descriptionInput" rows="2" placeholder="Optional – ein kurzer Hinweis zum Rezept"></textarea></label>
+
+        <div class="media-row">
+          <div class="image-preview-wrap"><img id="imagePreview" alt="Rezeptbild Vorschau" /><div id="imagePlaceholder" class="image-placeholder">📸<span>Bild hinzufügen</span></div></div>
+          <div class="media-actions"><label class="secondary-button file-label">📷 Bild auswählen<input id="imageInput" type="file" accept="image/*" hidden /></label><button type="button" id="removeImageBtn" class="text-button danger">Bild entfernen</button><p class="help">Das Bild wird lokal gespeichert und beim Backup mitgesichert.</p></div>
+        </div>
+
+        <div class="section-builder">
+          <div class="section-heading"><div><h3>Zutaten</h3><p class="muted">Mehrere Bereiche wie „Teig“, „Glasur“ oder „Füllung“ sind möglich.</p></div><button type="button" id="addSectionBtn" class="secondary-button">＋ Bereich</button></div>
+          <div id="ingredientSections"></div>
+        </div>
+
+        <div class="steps-builder">
+          <div class="section-heading"><div><h3>Zubereitung</h3><p class="muted">Die Schritte werden automatisch nummeriert.</p></div><button type="button" id="addStepBtn" class="secondary-button">＋ Schritt</button></div>
+          <div id="stepsList"></div>
+        </div>
+
+        <div class="form-grid two-cols">
+          <label>Originalquelle (optional)<input id="sourceUrlInput" type="url" placeholder="https://www.instagram.com/..." /></label>
+          <label>Account / Quelle<input id="sourceNameInput" maxlength="120" placeholder="z. B. @rezeptkonto" /></label>
+        </div>
+        <label>Eigene Notizen<textarea id="notesInput" rows="3" placeholder="Was möchtest du beim nächsten Mal ändern?"></textarea></label>
+        <div class="modal-footer"><button type="button" id="cancelModalBtn" class="secondary-button">Abbrechen</button><button type="submit" class="primary-button">Rezept speichern</button></div>
+      </form>
+    </div>
+  </div>
+
+  <input id="fileImportInput" type="file" accept="application/json,.json,.zip" hidden />
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

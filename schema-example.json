@@ -1,0 +1,64 @@
+{
+  "format": "recipe-book",
+  "version": 1,
+  "exportedAt": "2026-09-06T00:00:00.000Z",
+  "recipes": [
+    {
+      "id": "01EXAMPLE",
+      "name": "Schokoladenkuchen",
+      "description": "Saftiger Schokoladenkuchen",
+      "servings": 8,
+      "rating": 5,
+      "favorite": true,
+      "image": null,
+      "source": {
+        "url": "https://www.instagram.com/",
+        "name": "@beispiel"
+      },
+      "notes": "Nächstes Mal etwas weniger Zucker.",
+      "categories": ["Backen"],
+      "tags": ["Schokolade", "Kuchen"],
+      "sections": [
+        {
+          "id": "01SECTION",
+          "name": "Teig",
+          "sortOrder": 1,
+          "ingredients": [
+            {
+              "id": "01INGREDIENT",
+              "amount": 250,
+              "unit": "g",
+              "name": "Mehl",
+              "note": "gesiebt",
+              "sortOrder": 1
+            }
+          ]
+        },
+        {
+          "id": "01SECTION2",
+          "name": "Glasur",
+          "sortOrder": 2,
+          "ingredients": [
+            {
+              "id": "01INGREDIENT2",
+              "amount": 100,
+              "unit": "g",
+              "name": "Zartbitterschokolade",
+              "note": "gehackt",
+              "sortOrder": 1
+            }
+          ]
+        }
+      ],
+      "preparationSteps": [
+        {
+          "id": "01STEP",
+          "step": 1,
+          "text": "Mehl, Zucker und Kakao vermischen."
+        }
+      ],
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    }
+  ]
+}
