@@ -27,3 +27,41 @@
 @media(max-width:900px){
   .topbar-actions .topbar-tool { display:flex; min-height:44px; align-items:center; }
 }
+
+
+/* v8 mobile UX: comfortable editing on iPhone/iOS */
+.back-to-recipes{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:12px;padding:9px 12px;margin:0 0 16px;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.back-to-recipes:hover{background:#faf6f1}
+@media(max-width:700px){
+  .modal-backdrop{padding:8px;align-items:flex-start;overflow-y:auto}
+  .modal{width:100%;max-height:none;margin:8px 0;border-radius:18px;padding:18px 14px 22px}
+  .modal-header h2{font-size:24px}
+  .modal label{font-size:13px;gap:8px}
+  .modal input,.modal textarea,.modal select{font-size:16px;line-height:1.45;padding:13px 12px;border-radius:12px}
+  .modal textarea{min-height:110px}
+  #descriptionInput{min-height:125px}
+  #notesInput{min-height:120px}
+  .ingredient-section{padding:13px;border-radius:15px}
+  .section-title-row input{min-height:46px;font-size:16px}
+  .ingredient-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px;grid-template-rows:auto auto;gap:8px;margin-bottom:10px}
+  .ingredient-row input:nth-child(1){grid-column:1;grid-row:1}
+  .ingredient-row input:nth-child(2){grid-column:2;grid-row:1}
+  .ingredient-row input:nth-child(3){grid-column:1 / 3;grid-row:2}
+  .ingredient-row .small-button{grid-column:3;grid-row:1 / 3;min-height:48px;font-size:18px}
+  .step-row{grid-template-columns:34px 1fr 42px;gap:8px}
+  .step-row textarea{min-height:110px;font-size:16px}
+  .small-button{min-width:42px;min-height:42px}
+  .add-row{font-size:14px;padding:8px 2px}
+  .section-heading .secondary-button{min-height:44px}
+  .modal-footer{position:sticky;bottom:-22px;background:var(--surface);padding-top:14px;padding-bottom:4px}
+  .modal-footer .primary-button,.modal-footer .secondary-button{min-height:46px}
+  .media-row{gap:12px}
+  .image-preview-wrap{width:120px;height:100px}
+}
+@media(max-width:420px){
+  .main{padding:16px 12px 32px}
+  .topbar h1{font-size:25px}
+  .topbar-actions{gap:6px}
+  .topbar-tool{font-size:11px;padding:10px 5px}
+  .recipe-grid{grid-template-columns:1fr}
+  .detail-image{height:230px}
+}
