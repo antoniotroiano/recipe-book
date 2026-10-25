@@ -1,6 +1,9 @@
+/* IndexedDB persistence layer: recipes and categories. */
+
 const DB_NAME = 'recipe-book-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = 'recipes';
+const CATEGORY_STORE = 'categories';
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -8,13 +11,14 @@ function openDb() {
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
+      if (!db.objectStoreNames.contains(CATEGORY_STORE)) db.createObjectStore(CATEGORY_STORE, { keyPath: 'id' });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
 }
 
-export async function getAllRecipes() {
+async function getAllRecipes() {
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readonly');
@@ -24,7 +28,7 @@ export async function getAllRecipes() {
   });
 }
 
-export async function putRecipe(recipe) {
+async function putRecipe(recipe) {
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
@@ -34,7 +38,7 @@ export async function putRecipe(recipe) {
   });
 }
 
-export async function deleteRecipe(id) {
+async function deleteRecipe(id) {
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
@@ -44,7 +48,7 @@ export async function deleteRecipe(id) {
   });
 }
 
-export async function replaceAll(recipes) {
+async function replaceAll(recipes) {
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
@@ -55,3 +59,25 @@ export async function replaceAll(recipes) {
     tx.onerror = () => reject(tx.error);
   });
 }
+
+
+async function getAllCategories() {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CATEGORY_STORE, 'readonly');
+    const req = tx.objectStore(CATEGORY_STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function putCategory(category) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CATEGORY_STORE, 'readwrite');
+    tx.objectStore(CATEGORY_STORE).put(category);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+

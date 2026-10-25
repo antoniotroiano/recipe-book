@@ -2,6 +2,9 @@
   "format": "recipe-book",
   "version": 1,
   "exportedAt": "2026-09-06T00:00:00.000Z",
+  "categories": [
+    { "id": "01CATEGORY", "name": "Backen", "createdAt": "2026-09-06T00:00:00.000Z" }
+  ],
   "recipes": [
     {
       "id": "01EXAMPLE",

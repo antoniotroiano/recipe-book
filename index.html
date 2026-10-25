@@ -3,27 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#fbf7f2" />
-  <title>Mein Rezeptbuch</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="theme-color" content="#f7f5ef" />
+  <meta name="application-version" content="1.1.0" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=1.1.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png?v=1.1.0" />
+  <link rel="shortcut icon" href="favicon.ico?v=1.1.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=1.1.0" />
+  <title>Mein Rezeptbuch · v1.1.0</title>
+  <link rel="stylesheet" href="css/style.css?v=1.1.0&amp;design=editorial" />
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand"><div class="brand-icon">🍴</div><div><strong>Mein Rezeptbuch</strong><span>Deine persönliche Sammlung</span></div></div>
+      <div class="brand"><div class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"></circle><circle cx="12" cy="12" r="5.6"></circle><path d="M3.5 4.2v5.4M1.8 4.2v3.4M5.2 4.2v3.4M3.5 9.6v10.2M20.5 4.2v15.6M20.5 4.2c-2.2 1.7-2.7 4.4-2.7 6.2h2.7"></path></svg></div><div><strong>Mein Rezeptbuch</strong><span>Deine persönliche Sammlung · v1.1.0</span></div></div>
       <nav class="nav">
-        <button class="nav-item active" data-view="recipes">📚 <span>Meine Rezepte</span></button>
-        <button class="nav-item" data-view="favorites">❤️ <span>Favoriten</span></button>
+        <button class="nav-item active" data-view="recipes"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z"></path><path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20M8 7h8M8 10h6"></path></svg></span><span>Meine Rezepte</span></button>
+        <button class="nav-item" data-view="favorites"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 8.8c0 5-8.8 10.2-8.8 10.2S3.2 13.8 3.2 8.8A4.5 4.5 0 0 1 12 6.5a4.5 4.5 0 0 1 8.8 2.3Z"></path></svg></span><span>Favoriten</span></button>
       </nav>
       <div class="sidebar-section">
         <div class="sidebar-title">Kategorien</div>
         <div id="categoryList" class="category-list"></div>
-        <button id="addCategoryBtn" class="text-button">＋ Kategorie</button>
+        <button id="addCategoryBtn" class="text-button"><span aria-hidden="true">＋</span> Kategorie</button>
       </div>
       <div class="sidebar-bottom">
-        <button id="importBtn" class="secondary-button full">⬆ Import</button>
-        <button id="exportBtn" class="secondary-button full">⬇ Alles exportieren</button>
+        <button id="importBtn" class="secondary-button full"><span aria-hidden="true">↥</span> Import</button>
+        <button id="exportBtn" class="secondary-button full"><span aria-hidden="true">↧</span> Alles exportieren</button>
       </div>
     </aside>
 
@@ -35,16 +40,16 @@
           <p id="viewSubtitle" class="muted">Alles, was du gern wiederkochst.</p>
         </div>
         <div class="topbar-actions">
-          <button id="mobileImportBtn" class="secondary-button topbar-tool">⬆ Import</button>
-          <button id="mobileExportBtn" class="secondary-button topbar-tool">⬇ Export</button>
-          <button id="mobileCategoryBtn" class="secondary-button topbar-tool">＋ Kategorie</button>
-          <button id="newRecipeBtn" class="primary-button">＋ Rezept hinzufügen</button>
+          <button id="mobileImportBtn" class="secondary-button topbar-tool"><span aria-hidden="true">↥</span> Import</button>
+          <button id="mobileExportBtn" class="secondary-button topbar-tool"><span aria-hidden="true">↧</span> Export</button>
+          <button id="mobileCategoryBtn" class="secondary-button topbar-tool"><span aria-hidden="true">＋</span> Kategorie</button>
+          <button id="newRecipeBtn" class="primary-button"><span aria-hidden="true">＋</span> Rezept hinzufügen</button>
         </div>
       </header>
 
       <section id="recipeView" class="content-view">
         <div class="toolbar">
-          <div class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Rezept suchen…" /></div>
+          <div class="search-wrap"><span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.4"></circle><path d="m15.5 15.5 4.2 4.2"></path></svg></span><input id="searchInput" type="search" placeholder="Rezept suchen…" /></div>
           <select id="sortSelect" aria-label="Sortierung">
             <option value="newest">Zuletzt hinzugefügt</option>
             <option value="name">Alphabetisch</option>
@@ -54,7 +59,7 @@
         <div id="filterChips" class="filter-chips"></div>
         <div id="recipeGrid" class="recipe-grid"></div>
         <div id="emptyState" class="empty-state hidden">
-          <div class="empty-icon">🍲</div>
+          <div class="empty-icon" aria-hidden="true">✳</div>
           <h2>Noch keine Rezepte</h2>
           <p>Lege dein erstes Rezept an oder importiere eine Sicherung.</p>
           <div class="empty-actions"><button class="primary-button" id="emptyNewBtn">＋ Erstes Rezept anlegen</button><button class="secondary-button" id="emptyImportBtn">⌘ Rezept aus Text übernehmen</button></div>
@@ -76,13 +81,13 @@
         </div>
         <div class="form-grid two-cols">
           <label>Kategorie<select id="categoryInput"></select></label>
-          <label>Bewertung<div id="ratingInput" class="rating-picker" aria-label="Bewertung"></div></label>
+          <div class="rating-field"><span class="form-field-label" id="ratingLabel">Bewertung</span><div id="ratingInput" class="rating-picker" role="group" aria-labelledby="ratingLabel"></div></div>
         </div>
         <label>Beschreibung<textarea id="descriptionInput" rows="2" placeholder="Optional – ein kurzer Hinweis zum Rezept"></textarea></label>
 
         <div class="media-row">
-          <div class="image-preview-wrap"><img id="imagePreview" alt="Rezeptbild Vorschau" /><div id="imagePlaceholder" class="image-placeholder">📸<span>Bild hinzufügen</span></div></div>
-          <div class="media-actions"><label class="secondary-button file-label">📷 Bild auswählen<input id="imageInput" type="file" accept="image/*" hidden /></label><button type="button" id="removeImageBtn" class="text-button danger">Bild entfernen</button><p class="help">Das Bild wird lokal gespeichert und beim Backup mitgesichert.</p></div>
+          <div class="image-preview-wrap"><img id="imagePreview" alt="Rezeptbild Vorschau" /><div id="imagePlaceholder" class="image-placeholder"><strong aria-hidden="true">▧</strong><span>Bild hinzufügen</span></div></div>
+          <div class="media-actions"><label class="secondary-button file-label">Bild auswählen<input id="imageInput" type="file" accept="image/*" hidden /></label><button type="button" id="removeImageBtn" class="text-button danger">Bild entfernen</button><p class="help">Das Bild wird lokal gespeichert und beim Backup mitgesichert.</p></div>
         </div>
 
         <div class="section-builder">
@@ -107,6 +112,9 @@
 
   <input id="fileImportInput" type="file" accept="application/json,.json,.zip" hidden />
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="js/app.js?v=8"></script>
+  <script src="js/storage.js?v=1.1.0&amp;design=editorial"></script>
+  <script src="js/recipe-model.js?v=1.1.0&amp;design=editorial"></script>
+  <script src="js/ui.js?v=1.1.0&amp;design=editorial"></script>
+  <script src="js/app.js?v=1.1.0&amp;design=editorial"></script>
 </body>
 </html>
